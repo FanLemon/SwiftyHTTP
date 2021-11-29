@@ -1,3 +1,6 @@
 # SwiftyHTTP
 
-A description of this package.
+Lighting HTTP Library base URLSession
+
+
+

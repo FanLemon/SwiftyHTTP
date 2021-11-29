@@ -228,6 +228,31 @@ final class SwiftyHTTPTests: XCTestCase {
         XCTAssertEqual(pageUser.support.text, "To keep ReqRes free, contributions towards server costs are appreciated!")
     }
     
+    @available(macOS 12.0.0, iOS 15.0.0, *)
+    func testAwaitGet() async throws {
+        
+        let result = try await APITestUserModule.singleUser.fetch(httpSession: APITestHTTPSession.shared, dataType: User.self)
+        
+        XCTAssertEqual(result.data.first_name, "Janet")
+        XCTAssertEqual(result.data.last_name, "Weaver")
+    }
+    
+    @available(macOS 12.0.0, iOS 15.0.0, *)
+    func testAwaitPost() async throws {
+        
+        let loginStatus = try await APITestUserModule.login(email: "eve.holt@reqres.in", password: "cityslicka").fetch(httpSession: APITestHTTPSession.shared, dataType: UserLoginStatus.self)
+        
+        XCTAssertEqual(loginStatus.token, "QpwL5tke4Pnpja7X4")
+    }
+    
+    @available(macOS 12.0.0, iOS 15.0.0, *)
+    func testAwaitURLEncoding() async throws {
+        
+        let pageUser = try await APITestUserModule.users(page: 2).fetch(httpSession: APITestHTTPSession.shared, dataType: UsersPage.self)
+        
+        XCTAssertEqual(pageUser.data.count, 6)
+        XCTAssertEqual(pageUser.support.text, "To keep ReqRes free, contributions towards server costs are appreciated!")
+    }
 }
 
 

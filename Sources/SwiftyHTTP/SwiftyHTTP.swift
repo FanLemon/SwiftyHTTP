@@ -46,7 +46,7 @@ public enum HTTPResponseDataType {
 }
 
 
-public enum HTTPSessionError {
+public enum HTTPSessionError: Error {
     
     case baseURLInvalid(baseURL: String)
     
@@ -63,6 +63,12 @@ public enum HTTPSessionError {
     case noResponsedData
     
     case decodingJSONDataError(jsonData: Data)
+}
+
+
+public enum HTTPSessionException: Error {
+    
+    case exception(reason: String)
 }
 
 
@@ -200,5 +206,82 @@ public extension HTTPURLRoute {
                 
         task.resume()
         return task
+    }
+    
+    @available(macOS 12.0.0, iOS 15.0.0, *)
+    func fetch<T>(httpSession: HTTPSession, dataType: T.Type) async throws -> T where T: Decodable {
+        
+        guard let baseURL = URL(string: httpSession.baseURLString) else {
+            throw HTTPSessionException.exception(reason: "Base URL Error [\(httpSession.baseURLString)]")
+        }
+        
+        var routeURL = baseURL.appendingPathComponent(path)
+        var bodyData: Data?
+        
+        switch parameter {
+        case .urlEncoding(let paras):
+            guard let encodedURL = URLComponents(routeURL: routeURL, parameters: paras)?.url else {
+                throw HTTPSessionException.exception(reason: "URLEncoding Error")
+            }
+            
+            routeURL = encodedURL
+            
+        case .postJSON(let paras):
+            bodyData = try? JSONSerialization.data(withJSONObject: paras, options: [])
+            
+            if nil == bodyData {
+                throw HTTPSessionException.exception(reason: "Parameters encode to json Error")
+            }
+            
+        case .postXML(let paras):
+            print("It looks like too old school. Objects: [\(paras)]")
+            break
+            
+        default:
+            break
+        }
+        
+        
+        var urlRequest = URLRequest(url: routeURL)
+        
+        urlRequest.httpMethod = method.rawValue
+        
+        headers.forEach { (key: String, value: String) in
+            urlRequest.addValue(value, forHTTPHeaderField: key)
+        }
+        
+        urlRequest.httpBody = bodyData
+                
+        do {
+            let (data, urlResponse) = try await httpSession.urlSession.data(for: urlRequest)
+            guard let response = urlResponse as? HTTPURLResponse else {
+                throw HTTPSessionException.exception(reason: "Response Error")
+            }
+            
+            switch response.statusCode {
+            case 200...299:
+                switch self.responseDataType {
+                case .json:
+                    let decoder = JSONDecoder()
+                    guard let model = try? decoder.decode(T.self, from: data) else {
+                        throw HTTPSessionError.decodingJSONDataError(jsonData: data)
+                    }
+                    
+                    return model
+                    
+                case .text:
+                    throw HTTPSessionException.exception(reason: "Response Text not implement")
+                    
+                default:
+                    throw HTTPSessionException.exception(reason: "Response XML not implement")
+                }
+                
+            default:
+                throw HTTPSessionException.exception(reason: "HTTP Responsed Status Code: [\(response.statusCode)]")
+            }
+            
+        } catch {
+            throw HTTPSessionException.exception(reason: "Request Error \(error)")
+        }
     }
 }
