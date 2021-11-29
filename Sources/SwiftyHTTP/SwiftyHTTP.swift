@@ -2,7 +2,7 @@ import Foundation
 
 
 
-protocol HTTPSession {
+public protocol HTTPSession {
     
     var urlSession: URLSession { get }
     
@@ -10,7 +10,7 @@ protocol HTTPSession {
 }
 
 
-enum HTTPMethod: String {
+public enum HTTPMethod: String {
     
     case GET = "GET"
     
@@ -24,7 +24,7 @@ enum HTTPMethod: String {
 }
 
 
-enum HTTPSessionParameter {
+public enum HTTPSessionParameter {
     
     case none
     
@@ -36,7 +36,7 @@ enum HTTPSessionParameter {
 }
 
 
-enum HTTPResponseDataType {
+public enum HTTPResponseDataType {
     
     case text
     
@@ -46,7 +46,7 @@ enum HTTPResponseDataType {
 }
 
 
-enum HTTPSessionError {
+public enum HTTPSessionError {
     
     case baseURLInvalid(baseURL: String)
     
@@ -66,7 +66,7 @@ enum HTTPSessionError {
 }
 
 
-enum HTTPSessionResponse<T> {
+public enum HTTPSessionResponse<T> {
     
     case success(T)
     
@@ -74,10 +74,10 @@ enum HTTPSessionResponse<T> {
 }
 
 
-typealias HTTPSessionHeaders = [String: String]
+public typealias HTTPSessionHeaders = [String: String]
 
 
-protocol HTTPURLRoute {
+public protocol HTTPURLRoute {
     
     var path: String { get }
     
@@ -105,7 +105,7 @@ extension URLComponents {
 }
 
 
-extension HTTPURLRoute {
+public extension HTTPURLRoute {
     
     @discardableResult func request<T>(httpSession: HTTPSession, dataType: T.Type, completion: @escaping (_ response: HTTPSessionResponse<T>) -> Void) -> URLSessionTask? where T: Decodable {
         
