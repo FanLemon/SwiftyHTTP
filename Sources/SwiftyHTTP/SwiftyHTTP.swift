@@ -183,12 +183,17 @@ public extension HTTPURLRoute {
                 switch self.responseDataType {
                 case .json:
                     let decoder = JSONDecoder()
-                    guard let model = try? decoder.decode(T.self, from: respData) else {
+                    do {
+                        let model = try decoder.decode(dataType, from: respData)
+                        completion(HTTPSessionResponse.success(model))
+                    } catch {
+                        let str = String(data: respData, encoding: .utf8)
+                        print("JSON[\(String(describing: str))]")
+                        
+                        print(error)
+                        
                         completion(HTTPSessionResponse.failure(error: HTTPSessionError.decodingJSONDataError(jsonData: respData)))
-                        return
                     }
-                    
-                    completion(HTTPSessionResponse.success(model))
                     
                 case .text:
                     print("Responsed Data is Text.")
@@ -263,11 +268,17 @@ public extension HTTPURLRoute {
                 switch self.responseDataType {
                 case .json:
                     let decoder = JSONDecoder()
-                    guard let model = try? decoder.decode(T.self, from: data) else {
+                    do {
+                        let model = try decoder.decode(dataType, from: data)
+                        return model
+                    } catch {
+                        let str = String(data: data, encoding: .utf8)
+                        print("JSON[\(String(describing: str))]")
+                        
+                        print(error)
+                        
                         throw HTTPSessionError.decodingJSONDataError(jsonData: data)
                     }
-                    
-                    return model
                     
                 case .text:
                     throw HTTPSessionException.exception(reason: "Response Text not implement")
